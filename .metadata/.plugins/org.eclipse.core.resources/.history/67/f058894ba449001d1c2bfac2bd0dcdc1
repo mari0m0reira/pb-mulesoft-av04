@@ -63,11 +63,40 @@ public class PaymentController {
 	*/
 	@PostMapping
 	@Transactional
-	public ResponseEntity<PaymentDto> post(@RequestBody @Valid Pedido form, UriComponentsBuilder uriBuider) {
-		PaymentDto pedidoRealizado = service.criarPedido(form);
-		URI uri = uriBuider.path("api/v1/order/payment").buildAndExpand().toUri();
-		return ResponseEntity.created(uri).body(pedidoRealizado);
+	public ResponseEntity<PedidoDto> post(@RequestBody @Valid Pedido form, UriComponentsBuilder uriBuider) {
+		//PaymentDto pedidoRealizado = service.criarPedido(form);
+		//URI uri = uriBuider.path("api/v1/order/payment").buildAndExpand().toUri();
+		//return ResponseEntity.created(uri).body(pedidoRealizado);
 		
+		System.out.println(form.getCpf() + "\n" +
+							form.getShipping() 	+ "\n" +	
+							form.getPayment().getCard_number() + "\n" +
+							form.getPayment().getCardholder_name() + "\n" +
+							form.getPayment().getSecurity_code() + "\n" +
+							form.getPayment().getExpiration_month() + "\n" +
+							form.getPayment().getExpiration_year() + "\n" +
+							form.getPayment().getBrand() 
+		);
+		/*
+			HttpEntity<AuthDto> requestBody = new HttpEntity<>(newEmployee, headers);	
+			RestTemplate restTemplate = new RestTemplate();
+			restTemplate = new RestTemplateBuilder().build();
+			AuthDto deto;
+			System.out.println("Teste 1:");
+			//deto = restTemplate.getForObject("https://pb-getway-payment.herokuapp.com/v1/auth", AuthDto.class);
+			deto = restTemplate.postForObject("https://pb-getway-payment.herokuapp.com/v1/auth",new AuthEnviarDto(), AuthDto.class);
+			System.out.println("Teste" + deto);
+		*/
+		System.out.println("----------------------CHEGOU AQUI--------------------------");
+			AuthDto dto = service.autenticar();
+			System.out.println(dto.getAccess_token());
+			System.out.println(dto.getToken_type());
+			System.out.println(dto.getExpires_in());
+					
+		
+		//retirar
+		URI uri = uriBuider.path("api/v1/order/payment").buildAndExpand().toUri();
+		return ResponseEntity.created(uri).body(form);
 	}
 	
 	

@@ -8,11 +8,14 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import br.com.compass.payment.dto.AuthDto;
 import br.com.compass.payment.dto.AuthEnviarDto;
+import br.com.compass.payment.dto.ItemDto;
 import br.com.compass.payment.dto.PaymentDto;
 import br.com.compass.payment.http.AuthClient;
 import br.com.compass.payment.model.Item;
@@ -26,7 +29,9 @@ import br.com.compass.payment.security.Token;
 
 @Service
 public class PaymentService{
-		
+	
+	private String url = "https://pb-getway-payment.herokuapp.com/v1/auth";
+	
 	@Autowired
 	private ModelMapper modelMapper;
 	
@@ -96,7 +101,8 @@ public class PaymentService{
 		return valor;
 	}
 	
-	public PaymentDto criarPedido(Pedido pedido){		
+	public PaymentDto criarPedido(Pedido pedido){
+		AuthDto valores;
 		if(token == null || (token.getTokenTime() < data.getTime())) 
 			autenticar();
 		ResponseRequest responseRequest = enviarCreditCard(pedido);
@@ -120,7 +126,6 @@ public class PaymentService{
 		paymentRequest.getCard().setExpiration_year(String.valueOf(pedido.getPayment().getExpiration_year()));
 		String header = token.getTokenType() + " " + token.getTokenValue();
 		ResponseRequest responseRequest = authClient.getRequest(header, paymentRequest);
-		System.out.println(responseRequest);
 		return responseRequest;
 	}
 }

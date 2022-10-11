@@ -120,7 +120,6 @@ public class PaymentService{
 		paymentRequest.getCard().setExpiration_year(String.valueOf(pedido.getPayment().getExpiration_year()));
 		String header = token.getTokenType() + " " + token.getTokenValue();
 		ResponseRequest responseRequest = authClient.getRequest(header, paymentRequest);
-		System.out.println(responseRequest);
 		return responseRequest;
 	}
 }
