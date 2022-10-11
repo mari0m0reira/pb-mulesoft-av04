@@ -1,0 +1,10 @@
+package br.com.compass.payment.model;
+
+public class Card {
+	private String card_number;
+	private String cardholder_name;
+	private String security_code;
+	private int expiration_month;
+	private int expiration_year;
+	private String brand;
+}

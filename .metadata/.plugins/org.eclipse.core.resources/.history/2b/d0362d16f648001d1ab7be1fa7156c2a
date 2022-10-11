@@ -1,0 +1,16 @@
+package br.com.compass.payment.model;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+
+@Entity
+public class Payment {
+	
+	@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private String order_id;
+	private String total;
+	private String payment_status;
+	private String message;
+}

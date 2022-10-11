@@ -1,0 +1,5 @@
+package br.com.compass.payment.config;
+
+public class Configuracao {
+
+}

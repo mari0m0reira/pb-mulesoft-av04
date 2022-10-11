@@ -1,0 +1,6 @@
+package br.com.compass.payment.dto;
+
+public class AuthEnviarDto {
+	private String client_id = "client_id_test";;
+	private String api_key = "87397a01-ef6d-4c2e-aaa6-a0dafa99999";
+}

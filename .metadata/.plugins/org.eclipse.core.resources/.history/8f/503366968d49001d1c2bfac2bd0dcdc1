@@ -1,0 +1,10 @@
+package br.com.compass.payment.model;
+
+public class ResponseCard {
+	private String number_token;
+	private String cardholder_name;
+	private String security_code;
+	private String brand;
+	private String expiration_month;
+	private String expiration_year;
+}

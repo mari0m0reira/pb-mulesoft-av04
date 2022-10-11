@@ -1,0 +1,25 @@
+package br.com.compass.payment.security;
+
+import java.util.Date;
+
+
+public class Token {
+	private String token;
+	private Data tokenTime = new Date();
+	
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
+	}
+	public Data getTokenExpiration() {
+		return tokenTime;
+	}
+	public void setTokenExpiration(Data tokenTime) {
+		this.tokenTime = tokenTime;
+	}
+	
+	
+
+}

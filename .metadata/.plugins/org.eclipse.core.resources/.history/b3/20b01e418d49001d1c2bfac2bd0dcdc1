@@ -1,0 +1,14 @@
+package br.com.compass.payment.model;
+
+import java.math.BigDecimal;
+
+public class ResponseRequest {
+
+	private String payment_id;
+	private String seller_id;
+	private BigDecimal transaction_amount;
+	private String currency;
+	private String status;
+	private String received_at;
+	private Authorization autorization;
+}

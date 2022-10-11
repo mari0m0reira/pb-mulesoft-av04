@@ -1,0 +1,27 @@
+package br.com.compass.payment.model;
+
+public class Item {
+	private String item;
+	private long value;
+	private int qty;
+	public String getItem() {
+		return item;
+	}
+	public void setItem(String item) {
+		this.item = item;
+	}
+	public long getValue() {
+		return value;
+	}
+	public void setValue(long value) {
+		this.value = value;
+	}
+	public int getQty() {
+		return qty;
+	}
+	public void setQty(int qty) {
+		this.qty = qty;
+	}
+	
+	
+}

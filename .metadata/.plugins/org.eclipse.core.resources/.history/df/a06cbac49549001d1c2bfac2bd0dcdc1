@@ -1,0 +1,15 @@
+package br.com.compass.payment.http;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import br.com.compass.payment.dto.AuthDto;
+import br.com.compass.payment.dto.AuthEnviarDto;
+
+@FeignClient(name = "auth", url = "https://pb-getway-payment.herokuapp.com/v1/auth")
+public interface AuthClient {
+	
+	@PostMapping()
+	AuthDto getAuth(AuthEnviarDto enviar);
+
+}

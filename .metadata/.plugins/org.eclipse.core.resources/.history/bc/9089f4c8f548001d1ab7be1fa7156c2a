@@ -1,0 +1,17 @@
+package br.com.compass.payment.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+public class PaymentService {
+	
+	@Autowired
+	private final ModelMapper modelMapper;
+	
+	@Autowired
+	private PaymentRepository paymentRepository;
+
+	public List<PedidoDto> findAllOrder(){
+        List<Pedido> pedido = paymentRepository.findAll();
+        return PaymentDto.convert(pedido);
+    }
+}

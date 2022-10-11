@@ -1,0 +1,8 @@
+package br.com.compass.payment.controller.service;
+
+public class PedidoService {
+	@GetMapping
+    public List<PedidoDto> list(){
+        return service.findAllOrder();
+    }
+}

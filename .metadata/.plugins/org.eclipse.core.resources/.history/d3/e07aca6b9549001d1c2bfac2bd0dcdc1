@@ -1,0 +1,8 @@
+package br.com.compass.payment.dto;
+
+public class AuthEnviarDto {
+	private String client_id;
+	private String api_key;
+
+	
+}

@@ -1,0 +1,91 @@
+package br.com.compass.payment.service;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import br.com.compass.payment.dto.AuthDto;
+import br.com.compass.payment.dto.AuthEnviarDto;
+import br.com.compass.payment.dto.ItemDto;
+import br.com.compass.payment.dto.PaymentDto;
+import br.com.compass.payment.http.AuthClient;
+import br.com.compass.payment.model.Item;
+import br.com.compass.payment.model.Payment;
+import br.com.compass.payment.model.Pedido;
+import br.com.compass.payment.model.ResponseRequest;
+import br.com.compass.payment.repository.PaymentRepository;
+
+@Service
+public class PaymentService{
+	
+	private static final String URI_AUTH = "https://pb-getway-payment.herokuapp.com/v1/auth";
+	
+	@Autowired
+	private ModelMapper modelMapper;
+	
+	@Autowired
+	private PaymentRepository paymentRepository;	
+	
+	@Autowired
+	private AuthClient authClient;
+	
+
+	public List<PaymentDto> findAllOrder(){
+		return paymentRepository.findAll().stream()
+                .map(p -> modelMapper.map(p, PaymentDto.class))
+                .collect(Collectors.toList());    }
+
+
+	public ResponseEntity<PaymentDto> obterPorId(Long id) {
+		 Optional<Payment> payment = paymentRepository.findById(id);
+		 if(payment.isPresent()) {
+				return ResponseEntity.ok(new PaymentDto(payment.get()));
+			}else {
+				return ResponseEntity.notFound().build();      
+			}
+	}
+	
+	public PaymentDto salvarPedido(Pedido pedido, ResponseRequest resp) {
+			Payment pay = new Payment();
+			pay.setTotal(calcularValorTotal(pedido));
+			pay.setPayment_id(resp.getPayment_id());
+			pay.setPayment_status(resp.getStatus());
+			pay.setMessage(resp.getAutorization().getReason_message());
+			paymentRepository.save(pay);
+			return new PaymentDto(pay);
+	}
+		
+				
+	public AuthDto autenticar() {
+		System.out.println("Chegou autenticar");
+		AuthEnviarDto enviar = new AuthEnviarDto();
+		AuthDto dto  = authClient.getAuth("", enviar);
+		//HttpEntity<String> request = new HttpEntity<String>(enviar.toString());
+		//AuthDto dto = new RestTemplate().postForObject(URI_AUTH, enviar, AuthDto.class);
+		System.out.println(dto.getAccess_token());
+		return dto;
+	}
+	
+	public BigDecimal calcularValorPedido(Pedido pedido) {
+		List<Item>itens = pedido.getItems();
+		BigDecimal valor = new BigDecimal("0");
+		for(Item p : itens) {
+			valor.add(p.getValue().multiply(BigDecimal.valueOf(p.getQty())));
+		}
+	}
+	
+	public BigDecimal calcularValorTotal(Pedido pedido) {
+		BigDecimal valor = new BigDecimal("0");
+		valor.add(pedido.getShipping());
+		valor.add(calcularValorPedido(pedido));
+		valor.subtract(pedido.getDiscount());
+		return valor;
+}

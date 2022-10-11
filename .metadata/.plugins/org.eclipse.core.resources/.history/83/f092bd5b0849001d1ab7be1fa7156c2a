@@ -1,0 +1,72 @@
+package br.com.compass.payment.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Pedido {
+	private String cpf;
+	private List<Item> items = new ArrayList<>();
+	private long shipping;
+	private long discount;
+	private String payment_type;
+	private String currency_type;
+	private Card payment = new Card();
+	
+	
+	
+	public Pedido(String cpf, List<Item> items, long shipping, long discount, String payment_type, String currency_type,
+			Card payment) {
+		this.cpf = cpf;
+		this.items = items;
+		this.shipping = shipping;
+		this.discount = discount;
+		this.payment_type = payment_type;
+		this.currency_type = currency_type;
+		this.payment = payment;
+	}
+	public String getCpf() {
+		return cpf;
+	}
+	public void setCpf(String cpf) {
+		this.cpf = cpf;
+	}
+	public List<Item> getItems() {
+		return items;
+	}
+	public void setItems(List<Item> items) {
+		this.items = items;
+	}
+	public long getShipping() {
+		return shipping;
+	}
+	public void setShipping(long shipping) {
+		this.shipping = shipping;
+	}
+	public long getDiscount() {
+		return discount;
+	}
+	public void setDiscount(long discount) {
+		this.discount = discount;
+	}
+	public String getPayment_type() {
+		return payment_type;
+	}
+	public void setPayment_type(String payment_type) {
+		this.payment_type = payment_type;
+	}
+	public String getCurrency_type() {
+		return currency_type;
+	}
+	public void setCurrency_type(String currency_type) {
+		this.currency_type = currency_type;
+	}
+	
+	public Card getPayment() {
+		return payment;
+	}
+	public void setPayment(Card payment) {
+		this.payment = payment;
+	}
+		
+}
+

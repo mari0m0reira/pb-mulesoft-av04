@@ -1,0 +1,60 @@
+package br.com.compass.payment.controller;
+
+import java.util.List;
+import java.util.Optional;
+
+import javax.transaction.Transactional;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import br.com.compass.payment.dto.PaymentDto;
+import br.com.compass.payment.model.Payment;
+import br.com.compass.payment.repository.PaymentRepository;
+import br.com.compass.payment.service.PaymentService;
+
+@RestController
+@RequestMapping("api/v1/order/payment")
+public class PaymentController {
+	
+	@Autowired
+	private PaymentService service;
+	
+	@Autowired
+	private PaymentRepository paymentRepository;
+	
+	@GetMapping
+    public List<PaymentDto> list(){
+        return service.findAllOrder();
+    }
+
+	@GetMapping("/{id}")
+    public ResponseEntity<PaymentDto> listarPorId(@PathVariable @NotNull Long id) {
+		return service.obterPorId(id);
+		
+    }
+	
+	
+	@PostMapping
+	@Transactional
+	public ResponseEntity<PaymentDto> cadastrar(@RequestBody @Valid EstadosForm form, UriComponentsBuilder uriBuider) {
+		String nomeRegiao = form.getRegiao().toString();
+		if (ValidaRegiao.validar(nomeRegiao)) {
+			Estados estados = form.converter();
+			estadosRepository.save(estados);
+			URI uri = uriBuider.path("api/v1/estados/{id}").buildAndExpand(estados.getId()).toUri();
+			return ResponseEntity.created(uri).body(new EstadosDto(estados));
+		} else {
+			return ResponseEntity.badRequest().build();
+		}
+	}
+}

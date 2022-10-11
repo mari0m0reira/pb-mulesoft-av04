@@ -1,0 +1,11 @@
+package br.com.compass.payment.model;
+
+public class Authorization {
+		private long authorization_code;
+		private String authorized_at;
+		private int reason_code;
+		private String reason_message;
+	}
+
+
+}

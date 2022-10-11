@@ -1,0 +1,73 @@
+package br.com.compass.payment.service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import br.com.compass.payment.dto.AuthDto;
+import br.com.compass.payment.dto.AuthEnviarDto;
+import br.com.compass.payment.dto.PaymentDto;
+import br.com.compass.payment.http.AuthClient;
+import br.com.compass.payment.model.Payment;
+import br.com.compass.payment.model.Pedido;
+import br.com.compass.payment.repository.PaymentRepository;
+
+@Service
+public class PaymentService{
+	
+	@Autowired
+	private ModelMapper modelMapper;
+	
+	@Autowired
+	private PaymentRepository paymentRepository;	
+	
+	@Autowired
+	private AuthClient authClient;
+	
+
+	public List<PaymentDto> findAllOrder(){
+		return paymentRepository.findAll().stream()
+                .map(p -> modelMapper.map(p, PaymentDto.class))
+                .collect(Collectors.toList());
+    }
+
+
+	public ResponseEntity<PaymentDto> obterPorId(Long id) {
+		 Optional<Payment> payment = paymentRepository.findById(id);
+		 if(payment.isPresent()) {
+				return ResponseEntity.ok(new PaymentDto(payment.get()));
+			}else {
+				return ResponseEntity.notFound().build();      
+			}
+	}
+	/*
+	public PaymentDto criarPedido(Pedido form) {
+			PaymentDto pay = new PaymentDto();
+			pay.setTotal(null);
+			pay.setPayment_id(null);
+			pay.setPayment_status("APPROVED");
+			pay.setMessage(null);
+		
+			Payment payment = modelMapper.map(pay, Pedido.class);
+			paymentRepository.save(payment);
+			return pay;
+			URI uri = uriBuider.path("api/v1/estados/{id}").buildAndExpand(estados.getId()).toUri();
+			return ResponseEntity.created(uri).body(new EstadosDto(estados));
+		} else {
+			return ResponseEntity.badRequest().build();
+		}
+	}
+	*/
+	public AuthDto autenticar() {
+		System.out.println("Chegou autenticar");
+		AuthDto dto = new RestTemplate().postForObject("https://pb-getway-payment.herokuapp.com/v1/auth", new AuthEnviarDto(), AuthDto.class);
+		System.out.println(dto.getAccess_token());
+		return dto;
+	}
+}

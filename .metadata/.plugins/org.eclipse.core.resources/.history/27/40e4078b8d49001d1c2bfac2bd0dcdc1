@@ -1,0 +1,13 @@
+package br.com.compass.payment.model;
+
+import java.math.BigDecimal;
+
+public class PaymentRequest {
+	private String seller_id;
+	private Costumer costumer;
+	private String payment_type;
+	private String currency;
+	private BigDecimal transaction_amount;
+	private 
+	
+}
