@@ -3,7 +3,6 @@ package br.com.compass.payment.dto;
 import java.math.BigDecimal;
 
 import br.com.compass.payment.model.Item;
-import br.com.compass.payment.model.Pedido;
 
 public class ItemDto {
 	private String item;

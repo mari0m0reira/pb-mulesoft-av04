@@ -15,14 +15,16 @@ import br.com.compass.payment.dto.AuthDto;
 import br.com.compass.payment.dto.AuthEnviarDto;
 import br.com.compass.payment.dto.PaymentDto;
 import br.com.compass.payment.http.AuthClient;
+import br.com.compass.payment.model.Costumer;
 import br.com.compass.payment.model.Item;
 import br.com.compass.payment.model.Payment;
 import br.com.compass.payment.model.PaymentRequest;
 import br.com.compass.payment.model.Pedido;
+import br.com.compass.payment.model.ResponseCard;
 import br.com.compass.payment.model.ResponseRequest;
+import br.com.compass.payment.model.Token;
 import br.com.compass.payment.repository.PaymentRepository;
 import br.com.compass.payment.security.Information;
-import br.com.compass.payment.security.Token;
 
 @Service
 public class PaymentService{
@@ -36,8 +38,9 @@ public class PaymentService{
 	@Autowired
 	private AuthClient authClient;
 	
-	private Token token;	
-	private Date data = new Date();
+	//@Autowired
+	private Token token = new Token();	
+	 
 	Information information = new Information();
 
 	public List<PaymentDto> findAllOrder(){
@@ -64,19 +67,15 @@ public class PaymentService{
 			paymentRepository.save(pay);
 			return new PaymentDto(pay);
 	}
-		
 				
 	public void autenticar() {
 		AuthEnviarDto enviar = new AuthEnviarDto();		
 		enviar.setApi_key(information.getSeller_api_key());
 		enviar.setClient_id(information.getSeller_client_id());
-		System.out.println(enviar.getApi_key());
-		System.out.println(enviar.getClient_id());
 		AuthDto dto  = authClient.getAuth(enviar);
 		token.setTokenValue(dto.getAccess_token());
-		token.setTokenTime(dto.getExpires_in() + new Date().getTime());
+		token.setTokenTime(dto.getExpires_in()*1000 + new Date().getTime());
 		token.setTokenType(dto.getToken_type());
-		
 	}
 	
 	public BigDecimal calcularValorPedido(Pedido pedido) {
@@ -96,31 +95,72 @@ public class PaymentService{
 		return valor;
 	}
 	
-	public PaymentDto criarPedido(Pedido pedido){		
-		if(token == null || (token.getTokenTime() < data.getTime())) 
+	public PaymentDto criarPedido(Pedido pedido){	
+		if(token == null  || token.getTokenTime() < new Date().getTime()) {
 			autenticar();
+		}
 		ResponseRequest responseRequest = enviarCreditCard(pedido);
 		PaymentDto salvo = salvarPedido(pedido, responseRequest);
 		return salvo;
 	}
 		
 	public ResponseRequest enviarCreditCard(Pedido pedido) {
-		PaymentRequest paymentRequest = new PaymentRequest();
-		paymentRequest.setSeller_id(information.getSeller_api_key());
-		paymentRequest.getCostumer().setDocument_type("CPF");
-		paymentRequest.getCostumer().setDocument_number(pedido.getCpf());
-		paymentRequest.setPayment_type(pedido.getPayment_type());
-		paymentRequest.setCurrency(pedido.getCurrency_type());
-		paymentRequest.setTransaction_amount(calcularValorTotal(pedido));
-		paymentRequest.getCard().setNumber_token(token.getTokenValue());
-		paymentRequest.getCard().setCardholder_name(pedido.getPayment().getCardholder_name());
-		paymentRequest.getCard().setSecurity_code(pedido.getPayment().getSecurity_code());
-		paymentRequest.getCard().setBrand(pedido.getPayment().getBrand());
-		paymentRequest.getCard().setExpiration_month(String.valueOf(pedido.getPayment().getExpiration_month()));
-		paymentRequest.getCard().setExpiration_year(String.valueOf(pedido.getPayment().getExpiration_year()));
-		String header = token.getTokenType() + " " + token.getTokenValue();
+		PaymentRequest paymentRequest = preencherPaymentRequest(pedido);
+		String header = "Bearer " + token.getTokenValue();
+		System.out.println("ANTES");
+		System.out.println(header);
+		printarPaymentRequest(paymentRequest);
+		System.out.println(paymentRequest);
 		ResponseRequest responseRequest = authClient.getRequest(header, paymentRequest);
+		System.out.println("DEPOIS");
+		
 		System.out.println(responseRequest);
 		return responseRequest;
 	}
+	
+	 public PaymentRequest preencherPaymentRequest(Pedido pedido) {
+		 	PaymentRequest paymentRequest = new PaymentRequest();
+			paymentRequest.setSeller_id(information.getSeller_api_key());
+			paymentRequest.setCostumer(preencherCostumer(pedido));
+			paymentRequest.setPayment_type(pedido.getPayment_type());
+			paymentRequest.setCurrency(pedido.getCurrency_type());
+			paymentRequest.setTransaction_amount(calcularValorTotal(pedido));
+			paymentRequest.setCard(preencherCard(pedido));			
+			return paymentRequest;
+	 }
+	 
+	 public Costumer preencherCostumer(Pedido pedido) {
+		 Costumer costumer = new Costumer();
+		 costumer.setDocument_type("CPF");
+		 costumer.setDocument_number(pedido.getCpf());
+		 return costumer;
+	 }
+	 
+	 public ResponseCard preencherCard(Pedido pedido) {
+		 ResponseCard card = new ResponseCard();
+		 card.setNumber_token(token.getTokenValue());
+		 card.setCardholder_name(pedido.getPayment().getCardholder_name());
+		 card.setSecurity_code(pedido.getPayment().getSecurity_code());
+		 card.setBrand(pedido.getPayment().getBrand());
+		 card.setExpiration_month(String.valueOf(pedido.getPayment().getExpiration_month()));
+		 card.setExpiration_year(String.valueOf(pedido.getPayment().getExpiration_year()));
+		 return card;
+	 }
+	 
+	 public void printarPaymentRequest(PaymentRequest pay) {
+		 System.out.println("seller_id: " + pay.getSeller_id());
+		 System.out.println("costumer: " + pay.getCostumer());
+		 System.out.println("document_type: " + pay.getCostumer().getDocument_type());
+		 System.out.println("document_number: " + pay.getCostumer().getDocument_number());
+		 System.out.println("payment_type: " + pay.getPayment_type());
+		 System.out.println("currency: " + pay.getCurrency());
+		 System.out.println("transaction_amount " + pay.getTransaction_amount());
+		 System.out.println("card: " + pay.getCard());
+		 System.out.println("number_token: " + pay.getCard().getNumber_token());
+		 System.out.println("cardholder_name: " + pay.getCard().getCardholder_name());
+		 System.out.println("security_code: " + pay.getCard().getSecurity_code());
+		 System.out.println("brand: " + pay.getCard().getBrand());
+		 System.out.println("expiration_month: " + pay.getCard().getExpiration_month());
+		 System.out.println("expiration_year: " + pay.getCard().getExpiration_year());
+	 }
 }

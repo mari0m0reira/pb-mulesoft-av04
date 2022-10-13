@@ -16,5 +16,5 @@ public interface AuthClient {
 	AuthDto getAuth(AuthEnviarDto authEnviarDto);
 
 	@PostMapping("/payments/credit-card")
-	ResponseRequest getRequest(@RequestHeader String string,  PaymentRequest paymentRequest);
+	ResponseRequest getRequest(@RequestHeader("Authorization") String string,  PaymentRequest paymentRequest);
 }

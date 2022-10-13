@@ -2,14 +2,12 @@ package br.com.compass.payment.controller;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,16 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-
-import br.com.compass.payment.dto.AuthDto;
-import br.com.compass.payment.dto.AuthEnviarDto;
 import br.com.compass.payment.dto.PaymentDto;
-import br.com.compass.payment.model.Payment;
 import br.com.compass.payment.model.Pedido;
-import br.com.compass.payment.repository.PaymentRepository;
 import br.com.compass.payment.service.PaymentService;
 
 @RestController
@@ -35,7 +27,6 @@ public class PaymentController {
 	
 	@Autowired
 	private PaymentService service;
-	
 	
 	
 	@GetMapping
@@ -47,20 +38,7 @@ public class PaymentController {
     public ResponseEntity<PaymentDto> listarPorId(@PathVariable @NotNull Long id) {
 		return service.obterPorId(id);		
     }
-		/*
-	@PostMapping
-	@Transactional
-	public ResponseEntity<PaymentDto> post(@RequestBody @Valid Pedido form, UriComponentsBuilder uriBuider) {
-		PaymentDto pedidoRealizado = service.criarPedido(form);
 		
-		URI uri = uriBuider.path("api/v1/estados/{id}").buildAndExpand(pedidoRealizado.getOrder_id()).toUri();
-		return ResponseEntity.created(uri).body(pedidoRealizado);
-		
-		
-		
-		
-	}
-	*/
 	@PostMapping
 	@Transactional
 	public ResponseEntity<PaymentDto> post(@RequestBody @Valid Pedido form, UriComponentsBuilder uriBuider) {

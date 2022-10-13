@@ -1,0 +1,151 @@
+package br.com.compass.payment.service;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import br.com.compass.payment.config.Token;
+import br.com.compass.payment.dto.AuthDto;
+import br.com.compass.payment.dto.AuthEnviarDto;
+import br.com.compass.payment.dto.PaymentDto;
+import br.com.compass.payment.http.AuthClient;
+import br.com.compass.payment.model.Item;
+import br.com.compass.payment.model.Payment;
+import br.com.compass.payment.model.PaymentRequest;
+import br.com.compass.payment.model.Pedido;
+import br.com.compass.payment.model.ResponseRequest;
+import br.com.compass.payment.repository.PaymentRepository;
+import br.com.compass.payment.security.Information;
+
+@Service
+public class PaymentService{
+		
+	@Autowired
+	private ModelMapper modelMapper;
+	
+	@Autowired
+	private PaymentRepository paymentRepository;	
+	
+	@Autowired
+	private AuthClient authClient;
+	
+	@Autowired
+	private Token token;	
+	 
+	Information information = new Information();
+
+	public List<PaymentDto> findAllOrder(){
+		return paymentRepository.findAll().stream()
+                .map(p -> modelMapper.map(p, PaymentDto.class))
+                .collect(Collectors.toList());    }
+
+
+	public ResponseEntity<PaymentDto> obterPorId(Long id) {
+		 Optional<Payment> payment = paymentRepository.findById(id);
+		 if(payment.isPresent()) {
+				return ResponseEntity.ok(new PaymentDto(payment.get()));
+			}else {
+				return ResponseEntity.notFound().build();      
+			}
+	}
+	
+	public PaymentDto salvarPedido(Pedido pedido, ResponseRequest resp) {
+			Payment pay = new Payment();
+			pay.setTotal(calcularValorTotal(pedido));
+			pay.setPayment_id(resp.getPayment_id());
+			pay.setPayment_status(resp.getStatus());
+			pay.setMessage(resp.getAutorization().getReason_message());
+			paymentRepository.save(pay);
+			return new PaymentDto(pay);
+	}
+		
+				
+	public void autenticar() {
+		AuthEnviarDto enviar = new AuthEnviarDto();		
+		enviar.setApi_key(information.getSeller_api_key());
+		enviar.setClient_id(information.getSeller_client_id());
+		AuthDto dto  = authClient.getAuth(enviar);
+		token.setTokenValue(dto.getAccess_token());
+		token.setTokenTime(dto.getExpires_in() + new Date().getTime());
+		token.setTokenType(dto.getToken_type());
+		
+	}
+	
+	public BigDecimal calcularValorPedido(Pedido pedido) {
+		List<Item>itens = pedido.getItems();
+		BigDecimal valor = new BigDecimal("0");
+		for(Item p : itens) {
+			valor.add(p.getValue().multiply(BigDecimal.valueOf(p.getQty())));
+		}
+		return valor;
+	}
+	
+	public BigDecimal calcularValorTotal(Pedido pedido) {
+		BigDecimal valor = new BigDecimal("0");
+		valor.add(pedido.getShipping());
+		valor.add(calcularValorPedido(pedido));
+		valor.subtract(pedido.getDiscount());
+		return valor;
+	}
+	
+	public PaymentDto criarPedido(Pedido pedido){	
+		Long tokenTime = token.getTokenTime();
+		Long currentTime = new Date().getTime();
+		System.out.println("Antes -Token time: " + token.getTokenTime());
+		System.out.println("Antes - Data: " + new Date().getTime());
+		if(token == null ) {
+			autenticar();
+			System.out.println("----Token");
+		}
+			
+		if( token.getTokenTime() < new Date().getTime()){
+			if(token.getTokenTime() < new Date().getTime())
+				System.out.println("DATA É MAIOR");
+			if(token.getTokenTime() > new Date().getTime())
+				System.out.println("TOKEN É MAIOR");
+			System.out.println("token.getTokenTime()< new Date().getTime() " + (token.getTokenTime()< new Date().getTime()));
+			System.out.println("-----autentica");
+			autenticar();
+			if(token.getTokenTime() < new Date().getTime())
+				System.out.println("DATA É MAIOR");
+			if(token.getTokenTime() > new Date().getTime())
+				System.out.println("TOKEN É MAIOR");
+			System.out.println("token.getTokenTime()< new Date().getTime() "+(token.getTokenTime()< new Date().getTime()));			
+			System.out.println("DURANTE -Token time: " + token.getTokenTime());
+			System.out.println("DURANTE - Data: " + new Date().getTime());
+		}
+		System.out.println("Depois - Token time: " + tokenTime);
+		System.out.println("Depois - Data: " + currentTime);
+		System.out.println(token.getTokenTime()< new Date().getTime());
+		ResponseRequest responseRequest = enviarCreditCard(pedido);
+		PaymentDto salvo = salvarPedido(pedido, responseRequest);
+		return salvo;
+	}
+		
+	public ResponseRequest enviarCreditCard(Pedido pedido) {
+		PaymentRequest paymentRequest = new PaymentRequest();
+		paymentRequest.setSeller_id(information.getSeller_api_key());
+		paymentRequest.getCostumer().setDocument_type("CPF");
+		paymentRequest.getCostumer().setDocument_number(pedido.getCpf());
+		paymentRequest.setPayment_type(pedido.getPayment_type());
+		paymentRequest.setCurrency(pedido.getCurrency_type());
+		paymentRequest.setTransaction_amount(calcularValorTotal(pedido));
+		paymentRequest.getCard().setNumber_token(token.getTokenValue());
+		paymentRequest.getCard().setCardholder_name(pedido.getPayment().getCardholder_name());
+		paymentRequest.getCard().setSecurity_code(pedido.getPayment().getSecurity_code());
+		paymentRequest.getCard().setBrand(pedido.getPayment().getBrand());
+		paymentRequest.getCard().setExpiration_month(String.valueOf(pedido.getPayment().getExpiration_month()));
+		paymentRequest.getCard().setExpiration_year(String.valueOf(pedido.getPayment().getExpiration_year()));
+		String header = token.getTokenType() + " " + token.getTokenValue();
+		ResponseRequest responseRequest = authClient.getRequest(header, paymentRequest);
+		System.out.println(responseRequest);
+		return responseRequest;
+	}
+}
